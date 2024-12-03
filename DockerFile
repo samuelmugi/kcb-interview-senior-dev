@@ -1,0 +1,24 @@
+# Stage 1: Build the application
+FROM gradle:8.2.1-jdk17 AS builder
+WORKDIR /app
+
+# Copy Gradle files and source code
+COPY build.gradle settings.gradle gradlew ./
+COPY gradle ./gradle
+COPY src ./src
+
+# Build the application
+RUN ./gradlew clean build -x test
+
+# Stage 2: Run the application
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+
+# Copy the built JAR file from the builder stage
+COPY --from=builder /app/build/libs/*.jar app.jar
+
+# Expose port 8080
+EXPOSE 8080
+
+# Command to run the application
+ENTRYPOINT ["java", "-jar", "app.jar"]
